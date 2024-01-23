@@ -272,6 +272,7 @@ class Postgres(Dialect):
             "REGPROCEDURE": TokenType.OBJECT_IDENTIFIER,
             "REGROLE": TokenType.OBJECT_IDENTIFIER,
             "REGTYPE": TokenType.OBJECT_IDENTIFIER,
+            "ROW": TokenType.STRUCT,
         }
 
         SINGLE_TOKENS = {
@@ -292,6 +293,7 @@ class Postgres(Dialect):
             "TO_CHAR": format_time_lambda(exp.TimeToStr, "postgres"),
             "TO_TIMESTAMP": _to_timestamp,
             "UNNEST": exp.Explode.from_arg_list,
+            "ROW": exp.Struct.from_arg_list,
         }
 
         FUNCTION_PARSERS = {
@@ -380,6 +382,7 @@ class Postgres(Dialect):
             exp.DataType.Type.BINARY: "BYTEA",
             exp.DataType.Type.VARBINARY: "BYTEA",
             exp.DataType.Type.DATETIME: "TIMESTAMP",
+            exp.DataType.Type.STRUCT: "ROW",
         }
 
         TRANSFORMS = {
@@ -459,6 +462,14 @@ class Postgres(Dialect):
             exp.TransientProperty: exp.Properties.Location.UNSUPPORTED,
             exp.VolatileProperty: exp.Properties.Location.UNSUPPORTED,
         }
+
+
+        def struct_sql(self, expression: exp.Struct) -> str:
+            if any(isinstance(arg, self.KEY_VALUE_DEFINITIONS) for arg in expression.expressions):
+                self.unsupported("Struct with key-value definitions is unsupported.")
+                return self.function_fallback_sql(expression)
+
+            return rename_func("ROW")(self, expression)
 
         def bracket_sql(self, expression: exp.Bracket) -> str:
             """Forms like ARRAY[1, 2, 3][3] aren't allowed; we need to wrap the ARRAY."""
