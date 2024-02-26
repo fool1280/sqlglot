@@ -3,6 +3,8 @@ from __future__ import annotations
 import typing as t
 
 from sqlglot.executor.env import ENV
+from sqlglot import expressions as exp
+
 
 if t.TYPE_CHECKING:
     from sqlglot.executor.table import Table, TableIter
@@ -19,14 +21,13 @@ class Context:
     evaluation of aggregation functions.
     """
 
-    def __init__(self, tables: t.Dict[str, Table], env: t.Optional[t.Dict] = None, schema: t.Optional[t.Dict] = None) -> None:
+    def __init__(self, tables: t.Dict[str, Table], env: t.Optional[t.Dict] = None) -> None:
         """
         Args
             tables: representing the scope of the current execution context.
             env: dictionary of functions within the execution context.
         """
         self.tables = tables
-        self.schema = schema
         self._table: t.Optional[Table] = None
         self.range_readers = {name: table.range_reader for name, table in self.tables.items()}
         self.row_readers = {name: table.reader for name, table in tables.items()}
@@ -76,7 +77,7 @@ class Context:
         for table in self.tables.values():
             table.rows = rows
 
-    def sort(self, key) -> None:
+    def sort(self, key, types: t.Optional[t.Sequence[exp.DataType]] = None) -> None:
         def sort_key(row: t.Tuple) -> t.Tuple:
             self.set_row(row)
             return self.eval_tuple(key)
