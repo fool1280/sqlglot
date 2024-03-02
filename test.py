@@ -5,10 +5,15 @@ from tests.helpers import TPCDS_SCHEMA
 import os
 import duckdb
 
+# sql = """
+# SELECT yi
+# FROM   (SELECT ib_lower_bound yi FROM income_band, reason) y,
+#        (SELECT ib_lower_bound zi FROM income_band) z;
+# """
+
 sql = """
 SELECT yi
-FROM   (SELECT ib_lower_bound yi FROM income_band, reason) y,
-       (SELECT ib_lower_bound zi FROM income_band) z;
+FROM   (SELECT ib_lower_bound yi FROM income_band, reason) y;
 """
 
 DIR_TPCDS = "./tests/fixtures/optimizer/tpc-ds/"
@@ -34,7 +39,7 @@ def to_csv(expression):
         )
     return expression
 
-print()
+
 table = execute(parse_one(sql).transform(to_csv).sql(pretty=True), TPCDS_SCHEMA)
 print(table)
 
