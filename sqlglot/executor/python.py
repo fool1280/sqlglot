@@ -39,6 +39,8 @@ class PythonExecutor:
                 elif isinstance(node, planner.Aggregate):
                     contexts[node] = self.aggregate(node, context)
                 elif isinstance(node, planner.Join):
+                    print("node", node.name)
+                    print("context.tables", context.tables)
                     contexts[node] = self.join(node, context)
                 elif isinstance(node, planner.Sort):
                     contexts[node] = self.sort(node, context)

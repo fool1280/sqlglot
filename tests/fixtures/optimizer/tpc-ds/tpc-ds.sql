@@ -62,6 +62,7 @@ LIMIT 100;
 --------------------------------------
 -- TPC-DS 2
 --------------------------------------
+# execute: true
 WITH wscs
      AS (SELECT sold_date_sk,
                 sales_price
