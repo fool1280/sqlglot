@@ -79,7 +79,7 @@ class PRQL(Dialect):
 
             return query.select(*selects, append=append, copy=False)
 
-        def _parse_take(self, query: exp.Query) -> exp.Query:
+        def _parse_take(self, query: exp.Query) -> t.Optional[exp.Expression]:
             num = self._parse_number()
             return num and query.limit(num)  # TODO: TAKE for ranges a..b
 
