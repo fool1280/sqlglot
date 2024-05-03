@@ -57,6 +57,7 @@ class PRQL(Dialect):
             "AGGREGATE": lambda self, query: self._parse_selection(
                 query, parse_method=self._parse_aggregate, append=False
             ),
+            "GROUP": lambda self, query: self._parse_group_by(query),
         }
 
         FUNCTIONS = {
@@ -84,13 +85,14 @@ class PRQL(Dialect):
             expression = expression if expression else self._parse_query()
             return expression
 
-        def _parse_query(self) -> t.Optional[exp.Query]:
-            from_ = self._parse_from()
+        def _parse_query(self, skip_from_token: bool = False) -> t.Optional[exp.Query]:
+            if not skip_from_token:
+                from_ = self._parse_from()
 
-            if not from_:
-                return None
+                if not from_:
+                    return None
 
-            query = exp.select("*").from_(from_, copy=False)
+                query = exp.select("*").from_(from_, copy=False)
 
             while self._match_texts(self.TRANSFORM_PARSERS):
                 query = self.TRANSFORM_PARSERS[self._prev.text.upper()](self, query)
@@ -169,6 +171,12 @@ class PRQL(Dialect):
             if alias:
                 return self.expression(exp.Alias, this=func, alias=alias)
             return func
+
+        def _parse_group_by(self, query: exp.Select) -> t.Optional[exp.Query]:
+            l_brace = self._match(TokenType.L_BRACE)
+            _group = self._parse_group(skip_group_by_token=True)
+            if l_brace and self._match(TokenType.R_BRACE):
+                self.raise_error("Expecting }")
 
         def _parse_expression(self) -> t.Optional[exp.Expression]:
             if self._next and self._next.token_type == TokenType.ALIAS:
